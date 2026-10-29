@@ -16,14 +16,21 @@ export function Plan({ events, done, runsBySlug, from, onLog }: Props) {
       <h2 id="plan-h" className="text-xl font-extrabold">
         Next letters
       </h2>
-      <p className="text-sm text-slate-700">The closest event for every letter you still need, nearest first.</p>
+      <p className="text-sm text-slate-700">
+        The closest event for every letter you still need, nearest first.
+      </p>
       {next.length === 0 ? (
-        <p className="rounded-2xl bg-emerald-50 p-6 text-center font-bold text-emerald-900">Alphabet complete. Legend.</p>
+        <p className="rounded-2xl bg-emerald-50 p-6 text-center font-bold text-emerald-900">
+          Alphabet complete. Legend.
+        </p>
       ) : (
         <ol className="flex flex-col gap-2">
           {next.map((e) => (
             <li key={e.slug} className="flex items-center gap-2">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-violet-100 text-lg font-black text-violet-900" aria-hidden="true">
+              <span
+                className="grid size-10 shrink-0 place-items-center rounded-xl bg-violet-100 text-lg font-black text-violet-900"
+                aria-hidden="true"
+              >
                 {e.letter}
               </span>
               <ul className="flex-1">

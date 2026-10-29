@@ -1,6 +1,12 @@
 import { Check, Minus, Plane } from "lucide-react";
 import { useState } from "react";
-import { LETTERS, type LatLng, type LetterStatus, nearest, type ParkrunEvent } from "../lib/alphabet";
+import {
+  type LatLng,
+  LETTERS,
+  type LetterStatus,
+  nearest,
+  type ParkrunEvent,
+} from "../lib/alphabet";
 import { EventRow } from "./EventRow";
 
 const STYLE = {
@@ -43,7 +49,10 @@ export function Alphabet({ events, statuses, runsBySlug, from, onLog }: Props) {
         </p>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-slate-200" aria-hidden="true">
-        <div className="h-full rounded-full bg-emerald-600 transition-[width]" style={{ width: `${(done / possible) * 100}%` }} />
+        <div
+          className="h-full rounded-full bg-emerald-600 transition-[width]"
+          style={{ width: `${(done / possible) * 100}%` }}
+        />
       </div>
       <ul className="grid grid-cols-7 gap-1.5 sm:grid-cols-9">
         {LETTERS.map((l) => {
@@ -69,9 +78,15 @@ export function Alphabet({ events, statuses, runsBySlug, from, onLog }: Props) {
         })}
       </ul>
       <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-        <span className="inline-flex items-center gap-1"><Check size={12} aria-hidden="true" /> done</span>
-        <span className="inline-flex items-center gap-1"><Plane size={12} aria-hidden="true" /> only overseas</span>
-        <span className="inline-flex items-center gap-1"><Minus size={12} aria-hidden="true" /> no event yet</span>
+        <span className="inline-flex items-center gap-1">
+          <Check size={12} aria-hidden="true" /> done
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Plane size={12} aria-hidden="true" /> only overseas
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Minus size={12} aria-hidden="true" /> no event yet
+        </span>
       </p>
 
       <section aria-labelledby="letter-h" aria-live="polite" className="flex flex-col gap-2">
@@ -86,13 +101,21 @@ export function Alphabet({ events, statuses, runsBySlug, from, onLog }: Props) {
           </ul>
         )}
         {statuses[letter] === "none" ? (
-          <p className="text-sm text-slate-600">No parkrun starts with {letter} anywhere yet, so it doesn't count towards the alphabet.</p>
+          <p className="text-sm text-slate-600">
+            No parkrun starts with {letter} anywhere yet, so it doesn't count towards the alphabet.
+          </p>
         ) : (
           <>
             <p className="text-sm font-semibold text-slate-700">Nearest {letter} events</p>
             <ul className="flex flex-col gap-2">
               {nearest(events, from, letter).map((e) => (
-                <EventRow key={e.slug} event={e} km={e.km} runs={runsBySlug.get(e.slug) ?? 0} onLog={onLog} />
+                <EventRow
+                  key={e.slug}
+                  event={e}
+                  km={e.km}
+                  runs={runsBySlug.get(e.slug) ?? 0}
+                  onLog={onLog}
+                />
               ))}
             </ul>
           </>

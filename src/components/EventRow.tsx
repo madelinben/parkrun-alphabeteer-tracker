@@ -24,7 +24,9 @@ export function EventRow({ event, km, runs, onLog }: Props) {
           <span className="sr-only">(opens parkrun event page in a new tab)</span>
         </a>
         <p className="truncate text-sm text-slate-600">
-          {[km !== undefined && formatKm(km), event.location, event.country === "INT" && "overseas"].filter(Boolean).join(" · ")}
+          {[km !== undefined && formatKm(km), event.location, event.country === "INT" && "overseas"]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
       </div>
       {runs > 0 && (

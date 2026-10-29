@@ -44,7 +44,10 @@ export function distanceKm(a: LatLng, b: LatLng): number {
   return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-export function letterStatuses(events: readonly ParkrunEvent[], done: ReadonlySet<string>): Record<string, LetterStatus> {
+export function letterStatuses(
+  events: readonly ParkrunEvent[],
+  done: ReadonlySet<string>
+): Record<string, LetterStatus> {
   const out: Record<string, LetterStatus> = {};
   for (const letter of LETTERS) {
     const list = events.filter((e) => e.letter === letter);
@@ -60,7 +63,10 @@ export function letterStatuses(events: readonly ParkrunEvent[], done: ReadonlySe
 }
 
 /** Letters completed by the visits that match a known event */
-export function doneLetters(events: readonly ParkrunEvent[], visits: readonly Visit[]): Set<string> {
+export function doneLetters(
+  events: readonly ParkrunEvent[],
+  visits: readonly Visit[]
+): Set<string> {
   const bySlug = new Map(events.map((e) => [e.slug, e.letter]));
   return new Set(visits.flatMap((v) => bySlug.get(v.slug) ?? []));
 }
@@ -75,7 +81,9 @@ export function nearest(events: readonly ParkrunEvent[], from: LatLng, letter?: 
 
 /** The closest event for every letter still to do, closest first: a road trip plan */
 export function plan(events: readonly ParkrunEvent[], done: ReadonlySet<string>, from: LatLng) {
-  return LETTERS.filter((l) => !done.has(l)).flatMap((l) => nearest(events, from, l, 1)).sort((a, b) => a.km - b.km);
+  return LETTERS.filter((l) => !done.has(l))
+    .flatMap((l) => nearest(events, from, l, 1))
+    .sort((a, b) => a.km - b.km);
 }
 
 export function formatKm(km: number): string {
@@ -85,5 +93,7 @@ export function formatKm(km: number): string {
 export function parseAlphabeteer(raw: unknown): AlphabeteerData | null {
   if (typeof raw !== "object" || raw === null) return null;
   const d = raw as Partial<AlphabeteerData>;
-  return d.version === 1 && Array.isArray(d.visits) ? { version: 1, visits: d.visits, home: d.home ?? null } : null;
+  return d.version === 1 && Array.isArray(d.visits)
+    ? { version: 1, visits: d.visits, home: d.home ?? null }
+    : null;
 }

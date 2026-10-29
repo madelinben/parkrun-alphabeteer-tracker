@@ -28,11 +28,15 @@ export function Runs({ events, visits, runsBySlug, date, onDate, onLog, onRemove
       </h2>
       <div className="grid grid-cols-2 gap-2 text-center">
         <p className={card}>
-          <span className="block text-2xl font-black tabular-nums text-violet-800">{visits.length}</span>
+          <span className="block text-2xl font-black tabular-nums text-violet-800">
+            {visits.length}
+          </span>
           <span className="text-sm text-slate-600">runs logged</span>
         </p>
         <p className={card}>
-          <span className="block text-2xl font-black tabular-nums text-violet-800">{runsBySlug.size}</span>
+          <span className="block text-2xl font-black tabular-nums text-violet-800">
+            {runsBySlug.size}
+          </span>
           <span className="text-sm text-slate-600">different events</span>
         </p>
       </div>
@@ -41,11 +45,21 @@ export function Runs({ events, visits, runsBySlug, date, onDate, onLog, onRemove
         <div className="flex flex-wrap gap-2">
           <label className="flex flex-1 flex-col gap-1 text-sm font-semibold">
             Find a parkrun
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Chester, Bushy, Zuiderpark…" className={field} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Chester, Bushy, Zuiderpark…"
+              className={field}
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm font-semibold">
             Run date
-            <input type="date" value={date} onChange={(e) => onDate(e.target.value)} className={field} />
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => onDate(e.target.value)}
+              className={field}
+            />
           </label>
         </div>
         {matches.length > 0 && (
@@ -55,15 +69,24 @@ export function Runs({ events, visits, runsBySlug, date, onDate, onLog, onRemove
             ))}
           </ul>
         )}
-        {q && matches.length === 0 && <p className="text-sm text-slate-600">No parkrun matches “{query}”.</p>}
+        {q && matches.length === 0 && (
+          <p className="text-sm text-slate-600">No parkrun matches “{query}”.</p>
+        )}
       </div>
 
       {sorted.length > 0 && (
         <ul className="flex flex-col gap-1">
           {sorted.map((v) => (
-            <li key={v.id} className="flex items-center gap-3 rounded-xl bg-white py-1 pl-3 pr-1 ring-1 ring-slate-200">
+            <li
+              key={v.id}
+              className="flex items-center gap-3 rounded-xl bg-white py-1 pl-3 pr-1 ring-1 ring-slate-200"
+            >
               <span className="w-24 text-sm tabular-nums text-slate-600">
-                {new Date(v.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                {new Date(v.date).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
               </span>
               <span className="flex-1 font-semibold">{bySlug.get(v.slug)?.name ?? v.slug}</span>
               <button

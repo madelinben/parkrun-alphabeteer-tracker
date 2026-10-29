@@ -54,10 +54,17 @@ export function AlphabeteerApp({ beforeExport }: { beforeExport?: BeforeExport }
   for (const v of data.visits) runsBySlug.set(v.slug, (runsBySlug.get(v.slug) ?? 0) + 1);
   const latest = [...data.visits].sort((a, b) => b.date.localeCompare(a.date))[0];
   const from = data.home ?? (latest && bySlug.get(latest.slug)) ?? FALLBACK;
-  const fromLabel = data.home ? "your location" : latest ? `${bySlug.get(latest.slug)?.name ?? "your last run"}` : "central England";
+  const fromLabel = data.home
+    ? "your location"
+    : latest
+      ? `${bySlug.get(latest.slug)?.name ?? "your last run"}`
+      : "central England";
 
   function log(slug: string) {
-    update({ ...data, visits: [...data.visits, { id: crypto.randomUUID(), slug, date: date || today() }] });
+    update({
+      ...data,
+      visits: [...data.visits, { id: crypto.randomUUID(), slug, date: date || today() }],
+    });
     setStatus(`Logged ${bySlug.get(slug)?.name ?? slug} parkrun.`);
   }
 
@@ -86,8 +93,18 @@ export function AlphabeteerApp({ beforeExport }: { beforeExport?: BeforeExport }
           <p role="status" className="text-sm font-semibold text-emerald-800 empty:hidden">
             {status}
           </p>
-          {tab === "alphabet" && <Alphabet events={EVENTS} statuses={statuses} runsBySlug={runsBySlug} from={from} onLog={log} />}
-          {tab === "plan" && <Plan events={EVENTS} done={done} runsBySlug={runsBySlug} from={from} onLog={log} />}
+          {tab === "alphabet" && (
+            <Alphabet
+              events={EVENTS}
+              statuses={statuses}
+              runsBySlug={runsBySlug}
+              from={from}
+              onLog={log}
+            />
+          )}
+          {tab === "plan" && (
+            <Plan events={EVENTS} done={done} runsBySlug={runsBySlug} from={from} onLog={log} />
+          )}
           {tab === "runs" && (
             <>
               <Runs
@@ -97,18 +114,29 @@ export function AlphabeteerApp({ beforeExport }: { beforeExport?: BeforeExport }
                 date={date}
                 onDate={setDate}
                 onLog={log}
-                onRemove={(id) => update({ ...data, visits: data.visits.filter((v) => v.id !== id) })}
+                onRemove={(id) =>
+                  update({ ...data, visits: data.visits.filter((v) => v.id !== id) })
+                }
               />
-              <DataBackup filename="parkrun-alphabeteer.json" data={data} parse={parseAlphabeteer} onRestore={update} beforeExport={beforeExport} />
+              <DataBackup
+                filename="parkrun-alphabeteer.json"
+                data={data}
+                parse={parseAlphabeteer}
+                onRestore={update}
+                beforeExport={beforeExport}
+              />
             </>
           )}
           <p className="text-xs text-slate-600">
-            Not affiliated with parkrun. Event list from parkrun's public events feed ({parkruns.updatedAt}); results and
-            event details live on parkrun's own pages.
+            Not affiliated with parkrun. Event list from parkrun's public events feed (
+            {parkruns.updatedAt}); results and event details live on parkrun's own pages.
           </p>
         </div>
       </div>
-      <nav aria-label="Alphabeteer" className="grid grid-cols-3 gap-1 border-t border-slate-200 bg-white p-1.5">
+      <nav
+        aria-label="Alphabeteer"
+        className="grid grid-cols-3 gap-1 border-t border-slate-200 bg-white p-1.5"
+      >
         {TABS.map(({ id, label, Icon }) => (
           <button
             key={id}

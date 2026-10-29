@@ -53,7 +53,10 @@ export function DataBackup<T>({ filename, data, parse, onRestore, beforeExport }
   const button =
     "inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900";
   return (
-    <section aria-labelledby={`${statusId}-h`} className="rounded-2xl border border-slate-200 bg-white p-4">
+    <section
+      aria-labelledby={`${statusId}-h`}
+      className="rounded-2xl border border-slate-200 bg-white p-4"
+    >
       <h2 id={`${statusId}-h`} className="font-semibold text-slate-900">
         Your data
       </h2>
