@@ -31,7 +31,7 @@ export function Runs({ events, visits, runsBySlug, date, onDate, onLog, onRemove
           <span className="block text-2xl font-black tabular-nums text-violet-800">
             {visits.length}
           </span>
-          <span className="text-sm text-slate-600">runs logged</span>
+          <span className="text-sm text-slate-600">parkruns</span>
         </p>
         <p className={card}>
           <span className="block text-2xl font-black tabular-nums text-violet-800">
@@ -89,14 +89,23 @@ export function Runs({ events, visits, runsBySlug, date, onDate, onLog, onRemove
                 })}
               </span>
               <span className="flex-1 font-semibold">{bySlug.get(v.slug)?.name ?? v.slug}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(v.id)}
-                aria-label={`Remove run at ${bySlug.get(v.slug)?.name ?? v.slug} on ${v.date}`}
-                className="grid size-11 place-items-center rounded-xl text-rose-700 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-rose-700"
-              >
-                <Trash2 size={16} aria-hidden="true" />
-              </button>
+              {v.activity ? (
+                <span
+                  className="grid min-h-11 place-items-center px-2 text-xs font-bold text-orange-800"
+                  title={v.activity}
+                >
+                  Strava
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onRemove(v.id)}
+                  aria-label={`Remove run at ${bySlug.get(v.slug)?.name ?? v.slug} on ${v.date}`}
+                  className="grid size-11 place-items-center rounded-xl text-rose-700 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-rose-700"
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                </button>
+              )}
             </li>
           ))}
         </ul>

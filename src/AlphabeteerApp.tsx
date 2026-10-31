@@ -1,21 +1,37 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CalendarCheck, LocateFixed, Route, SpellCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Alphabet } from "./components/Alphabet";
 import { DataBackup } from "./components/DataBackup";
 import { Plan } from "./components/Plan";
 import { Runs } from "./components/Runs";
+import { StravaConnect } from "./components/StravaConnect";
 import { ghost } from "./components/ui";
 import parkruns from "./data/parkruns.json";
+import { useStravaRuns } from "./hooks/useStravaRuns";
 import {
   type AlphabeteerData,
+  currentPosition,
   doneLetters,
   EMPTY,
   FALLBACK,
+  type LatLng,
+  letterCells,
   letterStatuses,
+  matchStravaRuns,
   type ParkrunEvent,
   parseAlphabeteer,
 } from "./lib/alphabet";
+import { sendBadge } from "./lib/badge";
 import { type BeforeExport, load, save } from "./lib/storage";
+import {
+  clearSession,
+  exchangeCode,
+  loadSession,
+  type Session,
+  saveSession,
+  takePending,
+} from "./lib/strava";
 
 const KEY = "parkrun-alphabeteer";
 const EVENTS: ParkrunEvent[] = parkruns.events;
@@ -28,18 +44,60 @@ const TABS = [
 ] as const;
 
 const today = () => new Date().toISOString().slice(0, 10);
+const queryClient = new QueryClient();
 
-export function AlphabeteerApp({ beforeExport }: { beforeExport?: BeforeExport }) {
+interface Props {
+  beforeExport?: BeforeExport;
+  /** Approximate visitor location from the host (e.g. Cloudflare), used when none is saved */
+  geo?: LatLng | null;
+  /** Called after a badge handoff is stored; the host opens the sticker maker. Hidden when absent. */
+  onMakeBadge?: () => void;
+}
+
+export function AlphabeteerApp(props: Props) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Tracker {...props} />
+    </QueryClientProvider>
+  );
+}
+
+function Tracker({ beforeExport, geo, onMakeBadge }: Props) {
   const [tab, setTab] = useState<Tab>("alphabet");
   const [data, setData] = useState<AlphabeteerData>(EMPTY);
   const [ready, setReady] = useState(false);
   const [date, setDate] = useState(today);
   const [status, setStatus] = useState("");
+  const [session, setSession] = useState<Session | null>(null);
+  const [stravaError, setStravaError] = useState("");
 
   // Load after mount: localStorage is unavailable during SSR and would cause a hydration mismatch.
+  // Also finishes a Strava OAuth round trip (?code&state) once.
   useEffect(() => {
     setData(parseAlphabeteer(load<unknown>(KEY, null)) ?? EMPTY);
-    setReady(true);
+    const params = new URLSearchParams(location.search);
+    const code = params.get("code");
+    const state = params.get("state");
+    if (!code || !state) {
+      setSession(loadSession());
+      setReady(true);
+      return;
+    }
+    history.replaceState(null, "", location.pathname + location.hash);
+    setTab("runs");
+    const pending = takePending();
+    if (!pending || pending.state !== state) {
+      setStravaError("Couldn't verify the Strava connection. Please try again.");
+      setReady(true);
+      return;
+    }
+    exchangeCode(pending, code)
+      .then((s) => {
+        saveSession(s);
+        setSession(s);
+      })
+      .catch((e: Error) => setStravaError(e.message))
+      .finally(() => setReady(true));
   }, []);
 
   const update = (next: AlphabeteerData) => {
@@ -47,18 +105,35 @@ export function AlphabeteerApp({ beforeExport }: { beforeExport?: BeforeExport }
     save(KEY, next);
   };
 
+  const onSession = (s: Session) => {
+    saveSession(s);
+    setSession(s);
+  };
+  const strava = useStravaRuns(session, onSession);
+
   const bySlug = useMemo(() => new Map(EVENTS.map((e) => [e.slug, e])), []);
-  const done = doneLetters(EVENTS, data.visits);
+  // Strava matches are derived, never stored: a manual log of the same run on the same day wins
+  const logged = new Set(data.visits.map((v) => `${v.slug}|${v.date}`));
+  const matched = useMemo(() => matchStravaRuns(strava.data ?? [], EVENTS), [strava.data]);
+  const fromStrava = matched.filter((v) => !logged.has(`${v.slug}|${v.date}`));
+  const visits = [...data.visits, ...fromStrava];
+  const done = doneLetters(EVENTS, visits);
   const statuses = letterStatuses(EVENTS, done);
   const runsBySlug = new Map<string, number>();
-  for (const v of data.visits) runsBySlug.set(v.slug, (runsBySlug.get(v.slug) ?? 0) + 1);
-  const latest = [...data.visits].sort((a, b) => b.date.localeCompare(a.date))[0];
-  const from = data.home ?? (latest && bySlug.get(latest.slug)) ?? FALLBACK;
-  const fromLabel = data.home
-    ? "your location"
-    : latest
-      ? `${bySlug.get(latest.slug)?.name ?? "your last run"}`
-      : "central England";
+  for (const v of visits) runsBySlug.set(v.slug, (runsBySlug.get(v.slug) ?? 0) + 1);
+
+  function makeBadge(letter: string | null) {
+    sendBadge({
+      letter,
+      done: done.size,
+      possible: Object.values(statuses).filter((s) => s !== "none").length,
+      cells: letterCells(EVENTS, visits, statuses),
+    });
+    onMakeBadge?.();
+  }
+  // Location hierarchy: saved > host (Cloudflare) > browser (on click only) > London
+  const from = data.home ?? geo ?? FALLBACK;
+  const fromLabel = data.home ? "your location" : geo ? "your area" : "London";
 
   function log(slug: string) {
     update({
@@ -68,12 +143,19 @@ export function AlphabeteerApp({ beforeExport }: { beforeExport?: BeforeExport }
     setStatus(`Logged ${bySlug.get(slug)?.name ?? slug} parkrun.`);
   }
 
-  function locate() {
-    navigator.geolocation?.getCurrentPosition(
-      (p) => update({ ...data, home: { lat: p.coords.latitude, lng: p.coords.longitude } }),
-      () => setStatus("Location unavailable. Distances are from your last run instead.")
-    );
+  /** Asks the browser, saves the result as home; falls back to the current origin */
+  async function locate(): Promise<LatLng> {
+    const home = await currentPosition();
+    if (!home) {
+      setStatus(`Location unavailable. Distances are from ${fromLabel} instead.`);
+      return from;
+    }
+    update({ ...data, home });
+    return home;
   }
+
+  // Only prompt for permission when nothing better than London is known
+  const origin = () => (data.home || geo ? Promise.resolve(from) : locate());
 
   if (!ready) return <div className="h-full animate-pulse bg-slate-100" />;
 
@@ -99,7 +181,10 @@ export function AlphabeteerApp({ beforeExport }: { beforeExport?: BeforeExport }
               statuses={statuses}
               runsBySlug={runsBySlug}
               from={from}
+              done={done}
+              origin={origin}
               onLog={log}
+              onBadge={onMakeBadge && makeBadge}
             />
           )}
           {tab === "plan" && (
@@ -107,9 +192,21 @@ export function AlphabeteerApp({ beforeExport }: { beforeExport?: BeforeExport }
           )}
           {tab === "runs" && (
             <>
+              <StravaConnect
+                session={session}
+                matched={fromStrava.length}
+                loading={strava.isFetching}
+                error={stravaError || (strava.error?.message ?? "")}
+                onRefresh={() => strava.refetch()}
+                onDisconnect={() => {
+                  clearSession();
+                  setSession(null);
+                  queryClient.removeQueries({ queryKey: ["strava"] });
+                }}
+              />
               <Runs
                 events={EVENTS}
-                visits={data.visits}
+                visits={visits}
                 runsBySlug={runsBySlug}
                 date={date}
                 onDate={setDate}

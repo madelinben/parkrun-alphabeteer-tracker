@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Track the parkrun events you have run and your A to Z alphabeteer progress, with the nearest event for every missing letter. Embedded in get-out-there; also deployed standalone to GitHub Pages from demo/.",
+  "description": "Track the parkrun events you have run (manually or from Strava) and your A to Z alphabeteer progress, with the nearest event for every missing letter. Embedded in get-out-there; also deployed standalone to GitHub Pages from demo/.",
   "exports": {
     ".": "./src/index.ts"
   },
@@ -15,12 +15,14 @@
     "parkruns:update": "node scripts/update-parkruns.ts"
   },
   "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
     "lucide-react": ">=0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",
+    "@tanstack/react-query": "^5.80.0",
     "@types/node": "^20",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

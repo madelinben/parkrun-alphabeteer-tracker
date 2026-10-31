@@ -4,7 +4,8 @@ Log the parkrun events you have run and work through the alphabet, A to Z.
 
 - Every UK and Ireland 5k event, plus worldwide Z events (X has none)
 - Alphabet grid: done, to do, overseas only, or impossible
-- Nearest events for any letter from your location or last run
+- Nearest events for any letter from your saved location, the host-provided area or London
+- "Nearest new letter" jumps to the closest letter you still need
 - Plan: the closest event for every letter you still need
 - Run log with dates and per-event counts
 - Data stays in the browser (localStorage). Download a backup file and restore it on any device.
